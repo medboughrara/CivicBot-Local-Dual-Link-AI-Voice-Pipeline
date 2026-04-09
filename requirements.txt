@@ -1,0 +1,7 @@
+faster-whisper
+kokoro
+soundfile
+websockets
+numpy
+scipy
+requests
