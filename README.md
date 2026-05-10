@@ -15,7 +15,6 @@ The system features a bidirectional voice and vision pipeline between an Android
 
 ## 🎥 Project Demonstration
 [![CivicBot Demo Preview](civicbot_preview.gif)](https://github.com/medboughrara/CivicBot-Local-Dual-Link-AI-Voice-Pipeline/raw/main/civicbot_demo.mp4)
-
 ---
 
 ## 🚀 Key Features
