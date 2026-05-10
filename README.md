@@ -15,14 +15,7 @@ The system features a bidirectional voice and vision pipeline between an Android
 
 ## 🎥 Project Demonstration
 
-<p align="center">
-  <video src="civicbot_demo.mp4" width="500px"></video>
-</p>
-
-<video src="civicbot_demo.mp4" width="320" height="240" controls></video>
-
-![non working video](images/video.mp4)
-
+![CivicBot Demo](civicbot_demo.mp4)
 ---
 
 ## 🚀 Key Features
