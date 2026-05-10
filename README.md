@@ -1,6 +1,13 @@
 # CivicBot: Local Dual-Link AI Voice Pipeline
 
-CivicBot is a high-performance, bidirectional AI voice and vision pipeline designed for real-time interaction between an Android endpoint and a local GPU-accelerated PC. It integrates state-of-the-art local models for Speech-to-Text (STT), Large Language Models (LLM), and Text-to-Speech (TTS) to provide a seamless, low-latency companion experience.
+CivicBot is an intelligent, high-performance robot companion designed by **Mouhamed** and **Nader** as an IoT project at the **Higher Institute of Bizerte (ISB), Tunisia**. 
+
+Designed as a civic-tech solution, CivicBot aims to bridge the gap between citizens and government by:
+- **Infrastructure Reporting**: Identifying and reporting public problems (potholes, lighting, etc.).
+- **Tourist Assistance**: Providing vocal guidance and information to visitors in Tunisia.
+- **Elderly Support**: Assisting senior citizens with road crossings and emergency reporting.
+
+The system features a bidirectional voice and vision pipeline between an Android endpoint and a local GPU-accelerated PC, ensuring secure, low-latency, and high-quality interaction.
 
 ![CivicBot UI](https://img.shields.io/badge/Status-Stable-brightgreen)
 ![Platform-Android](https://img.shields.io/badge/Platform-Android-orange)
