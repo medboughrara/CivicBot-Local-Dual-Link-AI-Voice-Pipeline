@@ -22,6 +22,10 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.Color
 import com.aiassistant.core.ui.*
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.background
+import androidx.compose.ui.Alignment
 
 class MainActivity : ComponentActivity() {
     
@@ -61,50 +65,62 @@ class MainActivity : ComponentActivity() {
                     surface = Color(0xFF1A1A1A)
                 )
             ) {
-                Scaffold(
-                    bottomBar = {
-                        NavigationBar(containerColor = Color(0xFF0D0D0D)) {
-                            NavigationBarItem(
-                                selected = state.currentTab == 0,
-                                onClick = { viewModel.setTab(0) },
-                                icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
-                                label = { Text("DASHBOARD") },
-                                colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF00E5FF), selectedTextColor = Color(0xFF00E5FF))
-                            )
-                            NavigationBarItem(
-                                selected = state.currentTab == 1,
-                                onClick = { viewModel.setTab(1) },
-                                icon = { Icon(Icons.Default.List, contentDescription = null) },
-                                label = { Text("STATUS") },
-                                colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF00E5FF), selectedTextColor = Color(0xFF00E5FF))
-                            )
-                            NavigationBarItem(
-                                selected = state.currentTab == 2,
-                                onClick = { viewModel.setTab(2) },
-                                icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                                label = { Text("CONFIG") },
-                                colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF00E5FF), selectedTextColor = Color(0xFF00E5FF))
-                            )
-                        }
+                val configuration = LocalConfiguration.current
+                val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                
+                if (isLandscape) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Color.Black),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BemoFace(emotion = state.emotion)
                     }
-                ) { padding ->
-                    Box(modifier = Modifier.padding(padding)) {
-                        when (state.currentTab) {
-                            0 -> DashboardScreen(
-                                state = state,
-                                onToggleService = {
-                                    if (state.isRunning) {
-                                        stopService(Intent(this@MainActivity, AIServiceForegroundService::class.java))
-                                        viewModel.toggleService(false)
-                                    } else {
-                                        startForegroundService(Intent(this@MainActivity, AIServiceForegroundService::class.java))
-                                        viewModel.toggleService(true)
-                                    }
-                                },
-                                onEmotionChange = { viewModel.setEmotion(it) }
-                            )
-                            1 -> StatusScreen(state = state)
-                            2 -> SettingsScreen(state = state, onConfigChange = { viewModel.updateConfig(it) })
+                } else {
+                    Scaffold(
+                        bottomBar = {
+                            NavigationBar(containerColor = Color(0xFF0D0D0D)) {
+                                NavigationBarItem(
+                                    selected = state.currentTab == 0,
+                                    onClick = { viewModel.setTab(0) },
+                                    icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
+                                    label = { Text("DASHBOARD") },
+                                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF00E5FF), selectedTextColor = Color(0xFF00E5FF))
+                                )
+                                NavigationBarItem(
+                                    selected = state.currentTab == 1,
+                                    onClick = { viewModel.setTab(1) },
+                                    icon = { Icon(Icons.Default.List, contentDescription = null) },
+                                    label = { Text("STATUS") },
+                                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF00E5FF), selectedTextColor = Color(0xFF00E5FF))
+                                )
+                                NavigationBarItem(
+                                    selected = state.currentTab == 2,
+                                    onClick = { viewModel.setTab(2) },
+                                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                    label = { Text("CONFIG") },
+                                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF00E5FF), selectedTextColor = Color(0xFF00E5FF))
+                                )
+                            }
+                        }
+                    ) { padding ->
+                        Box(modifier = Modifier.padding(padding)) {
+                            when (state.currentTab) {
+                                0 -> DashboardScreen(
+                                    state = state,
+                                    onToggleService = {
+                                        if (state.isRunning) {
+                                            stopService(Intent(this@MainActivity, AIServiceForegroundService::class.java))
+                                            viewModel.toggleService(false)
+                                        } else {
+                                            startForegroundService(Intent(this@MainActivity, AIServiceForegroundService::class.java))
+                                            viewModel.toggleService(true)
+                                        }
+                                    },
+                                    onEmotionChange = { viewModel.setEmotion(it) }
+                                )
+                                1 -> StatusScreen(state = state)
+                                2 -> SettingsScreen(state = state, onConfigChange = { viewModel.updateConfig(it) })
+                            }
                         }
                     }
                 }

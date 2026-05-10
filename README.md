@@ -15,6 +15,7 @@ CivicBot is a high-performance, bidirectional AI voice and vision pipeline desig
   - **STT**: [Faster-Whisper](https://github.com/SYSTRAN/faster-whisper) (Base model) for near-instant transcription.
   - **LLM**: Integrated with [Ollama](https://ollama.com/) (Recommended: `phi3:latest` or `llama3.2:1b`).
   - **TTS**: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) for high-quality, human-like voice synthesis at 24kHz.
+- **Remote Movement Control**: Real-time D-pad in the web dashboard for manual robot navigation.
 - **Smart Turn-Taking**: Intelligent silence detection (0.8s threshold) to prevent interruptions and ensure fluent conversation.
 - **High-Volume Audio**: Hardware-level speakerphone routing and 1.5x software gain boost for clear outdoor usability.
 - **Seamless Connectivity**: Ready-to-use with Tailscale mesh networks for secure remote access.

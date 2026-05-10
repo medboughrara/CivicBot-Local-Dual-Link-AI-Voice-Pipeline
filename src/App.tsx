@@ -6,15 +6,44 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'monitor' | 'logs' | 'config'>('monitor');
   const [deviceIp, setDeviceIp] = useState('100.64.0.1'); // Default Tailscale IP placeholder
   const [isStreaming, setIsStreaming] = useState(false);
-  const [logs, setLogs] = useState<{ id: number, text: string, type: 'info' | 'error' | 'ws' }[]>([]);
-
-  const addLog = (text: string, type: 'info' | 'error' | 'ws' = 'info') => {
-    setLogs(prev => [{ id: Date.now(), text, type }, ...prev].slice(0, 50));
-  };
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [wsStatus, setWsStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
 
   useEffect(() => {
-    addLog('Control Center Initialized', 'info');
+    const socket = new WebSocket(`ws://localhost:8765`);
+    setWsStatus('connecting');
+
+    socket.onopen = () => {
+      setWsStatus('connected');
+      addLog('WebSocket Connected to Backend', 'ws');
+    };
+
+    socket.onclose = () => {
+      setWsStatus('disconnected');
+      addLog('WebSocket Disconnected', 'error');
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        addLog(`Incoming: ${data.text || event.data.substring(0, 50)}`, 'ws');
+      } catch (e) {
+        // Binary audio data or non-JSON
+      }
+    };
+
+    setWs(socket);
+    return () => socket.close();
   }, []);
+
+  const sendMove = (direction: string) => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'move', direction }));
+      addLog(`Sent Move: ${direction.toUpperCase()}`, 'info');
+    } else {
+      addLog('Movement failed: WS not connected', 'error');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white font-mono flex flex-col">
@@ -22,7 +51,7 @@ export default function App() {
       <header className="border-b border-[#1A1A1A] p-4 flex justify-between items-center bg-[#0D0D0D]">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
-          <h1 className="text-xl font-bold tracking-widest text-cyan-400">CORE_ENGINE_V1.0</h1>
+          <h1 className="text-xl font-bold tracking-widest text-cyan-400">CIVIC_BOT_OS_V1.1</h1>
         </div>
         <div className="flex gap-4">
           <button 
@@ -57,7 +86,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 lg:grid-cols-3 gap-6"
             >
-              {/* Camera Stream */}
+              {/* Camera Stream & Controls */}
               <div className="lg:col-span-2 flex flex-col gap-4">
                 <div className="relative aspect-video bg-black rounded-lg border border-[#1A1A1A] overflow-hidden group">
                   {isStreaming ? (
@@ -87,24 +116,46 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2 text-cyan-400 text-xs font-bold">
-                    <Activity size={14} /> LIVE_TELEMETRY
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="p-3 bg-[#1A1A1A] rounded">
-                      <p className="text-[10px] text-gray-500 uppercase">Latency</p>
-                      <p className="text-xl font-bold">142ms</p>
+                {/* Movement Controls */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg">
+                        <div className="flex items-center gap-2 mb-4 text-cyan-400 text-xs font-bold uppercase tracking-widest">
+                            <Activity size={14} /> Drive_System_Control
+                        </div>
+                        <div className="flex justify-center">
+                            <div className="grid grid-cols-3 gap-2">
+                                <div />
+                                <button onMouseDown={() => sendMove('forward')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▲</button>
+                                <div />
+                                <button onMouseDown={() => sendMove('left')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">◀</button>
+                                <button onClick={() => sendMove('stop')} className="w-12 h-12 bg-red-900/20 border border-red-500/50 rounded hover:bg-red-500/30 flex items-center justify-center text-red-500 text-[10px] font-bold">STOP</button>
+                                <button onMouseDown={() => sendMove('right')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▶</button>
+                                <div />
+                                <button onMouseDown={() => sendMove('backward')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▼</button>
+                                <div />
+                            </div>
+                        </div>
                     </div>
-                    <div className="p-3 bg-[#1A1A1A] rounded">
-                      <p className="text-[10px] text-gray-500 uppercase">Framerate</p>
-                      <p className="text-xl font-bold">15 FPS</p>
+
+                    <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2 text-cyan-400 text-xs font-bold">
+                            <Activity size={14} /> LIVE_TELEMETRY
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="p-2 bg-[#1A1A1A] rounded">
+                                <p className="text-[8px] text-gray-500 uppercase">Latency</p>
+                                <p className="text-sm font-bold">{wsStatus === 'connected' ? '14ms' : '---'}</p>
+                            </div>
+                            <div className="p-2 bg-[#1A1A1A] rounded">
+                                <p className="text-[8px] text-gray-500 uppercase">Bitrate</p>
+                                <p className="text-sm font-bold">2.4 Mbps</p>
+                            </div>
+                            <div className="p-2 bg-[#1A1A1A] rounded col-span-2">
+                                <p className="text-[8px] text-gray-500 uppercase">Engine Status</p>
+                                <p className={`text-sm font-bold ${wsStatus === 'connected' ? 'text-green-400' : 'text-red-400'}`}>{wsStatus.toUpperCase()}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div className="p-3 bg-[#1A1A1A] rounded">
-                      <p className="text-[10px] text-gray-500 uppercase">Bitrate</p>
-                      <p className="text-xl font-bold">2.4 Mbps</p>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -125,7 +176,7 @@ export default function App() {
                     <div className="pt-4 border-t border-[#1A1A1A]">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-gray-400">WebSocket Status</span>
-                        <span className="text-xs text-green-500 font-bold px-2 py-0.5 bg-green-500/10 rounded">CONNECTED</span>
+                        <span className={`text-xs ${wsStatus === 'connected' ? 'text-green-500' : 'text-red-500'} font-bold px-2 py-0.5 bg-current/10 rounded`}>{wsStatus.toUpperCase()}</span>
                       </div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-gray-400">Camera Engine</span>

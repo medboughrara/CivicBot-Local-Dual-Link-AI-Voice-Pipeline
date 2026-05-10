@@ -16,6 +16,7 @@ data class WSMessage(
     val type: String,
     val text: String? = null,
     val emotion: String? = "neutral",
+    val direction: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -51,6 +52,9 @@ class WebSocketClientManager(
                             when (frame) {
                                 is Frame.Text -> {
                                     val msg = Json.decodeFromString<WSMessage>(frame.readText())
+                                    if (msg.type == "move") {
+                                        Timber.i("ROBOT_MOVE: ${msg.direction}")
+                                    }
                                     onTextReceived(msg)
                                 }
                                 is Frame.Binary -> {

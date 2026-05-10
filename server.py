@@ -38,7 +38,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger("AIPipeline")
 
 # --- Configuration ---
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 MODEL_NAME = "phi3:latest"
 WS_PORT = 8765
 
@@ -90,7 +90,10 @@ async def call_llm(prompt: str, ws, emotion_callback):
     
     payload = {
         "model": MODEL_NAME,
-        "prompt": f"<|system|>\nYou are CivicBot, a friendly and extremely concise robot companion. Respond in 1-2 short sentences. Do not use technical jargon or meta-talk.\n<|user|>\n{prompt}\n<|assistant|>\n",
+        "messages": [
+            {"role": "system", "content": "You are CivicBot, a friendly and extremely concise robot companion. Respond in 1-2 short sentences. Do not use technical jargon or meta-talk."},
+            {"role": "user", "content": prompt}
+        ],
         "stream": True,
         "keep_alive": -1 # Keep model in memory permanently
     }
@@ -104,23 +107,40 @@ async def call_llm(prompt: str, ws, emotion_callback):
         response = await loop.run_in_executor(None, fetch_stream)
         response.raise_for_status()
         
+        q = asyncio.Queue()
+        def stream_to_queue():
+            try:
+                for line in response.iter_lines():
+                    if line:
+                        loop.call_soon_threadsafe(q.put_nowait, line)
+            except Exception as e:
+                logger.error(f"Stream iteration error: {e}")
+            finally:
+                loop.call_soon_threadsafe(q.put_nowait, None)
+
+        # Run the blocking iteration in a background thread
+        loop.run_in_executor(None, stream_to_queue)
+        
         sentence_buffer = ""
-        # The iteration itself should be done carefully
-        for line in response.iter_lines():
-            if line:
-                data = json.loads(line)
-                word = data.get("response", "")
-                sentence_buffer += word
+        while True:
+            line = await q.get()
+            if line is None:
+                break
                 
-                # if we hit a sentence or significant pause boundary, stream to TTS
-                if any(punct in word for punct in ['.', '!', '?', ';', ',']):
-                    # Only chunk on comma if we have a bit of text to make it sound natural
-                    if ',' in word and len(sentence_buffer) < 40:
-                        continue
-                        
-                    await process_tts_and_send(sentence_buffer.strip(), ws)
-                    sentence_buffer = ""
+            data = json.loads(line)
+            message_obj = data.get("message", {})
+            word = message_obj.get("content", "") if isinstance(message_obj, dict) else ""
+            sentence_buffer += word
+            
+            # if we hit a sentence or significant pause boundary, stream to TTS
+            if any(punct in word for punct in ['.', '!', '?', ';', ',']):
+                # Only chunk on comma if we have a bit of text to make it sound natural
+                if ',' in word and len(sentence_buffer) < 40:
+                    continue
                     
+                await process_tts_and_send(sentence_buffer.strip(), ws)
+                sentence_buffer = ""
+                
         if sentence_buffer:
             await process_tts_and_send(sentence_buffer.strip(), ws)
             
@@ -175,8 +195,22 @@ async def flush_turn(ws):
             logger.error(f"Flush loop error: {e}")
             break
 
+connected_clients = set()
+
+async def broadcast(message, sender):
+    if connected_clients:
+        # Create a list to avoid issues with set size changing during iteration
+        for client in list(connected_clients):
+            if client != sender:
+                try:
+                    await client.send(message)
+                except:
+                    connected_clients.remove(client)
+
 async def handle_connection(ws):
     logger.info("Client connected")
+    connected_clients.add(ws)
+    
     global state
     state.audio_buffer.clear()
     state.turn_buffer = ""
@@ -202,11 +236,21 @@ async def handle_connection(ws):
                          state.last_voice_timestamp = time.time()
                          
              elif isinstance(message, str):
-                 logger.info(f"Received text payload: {message}")
+                 try:
+                     data = json.loads(message)
+                     if data.get("type") == "move":
+                         logger.info(f"Relaying move command: {data.get('direction')}")
+                         # Broadcast the move command to other clients (specifically the Android app)
+                         await broadcast(message, ws)
+                     else:
+                         logger.info(f"Received text payload: {message}")
+                 except json.JSONDecodeError:
+                     logger.info(f"Received non-JSON text: {message}")
                  
     except websockets.exceptions.ConnectionClosed:
          logger.info("Client disconnected")
     finally:
+         connected_clients.remove(ws)
          flush_task.cancel()
 
 async def main():
