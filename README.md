@@ -14,9 +14,10 @@ The system features a bidirectional voice and vision pipeline between an Android
 ![Backend-Python](https://img.shields.io/badge/Backend-Python-blue)
 
 ## 🎥 Project Demonstration
-![CivicBot Demo](https://github.com/medboughrara/CivicBot-Local-Dual-Link-AI-Voice-Pipeline/raw/main/civicbot_demo.mp4)
 
-If the video doesn't play automatically, [**Click here to watch the full Demonstration Video**](https://github.com/medboughrara/CivicBot-Local-Dual-Link-AI-Voice-Pipeline/raw/main/civicbot_demo.mp4)
+[![Click to watch the CivicBot Demo](civicbot_thumbnail.jpg)](https://github.com/medboughrara/CivicBot-Local-Dual-Link-AI-Voice-Pipeline/raw/main/civicbot_demo.mp4)
+
+> 👆 **Click the image above to watch the full 1m27s demonstration video!** 👆
 
 ---
 
