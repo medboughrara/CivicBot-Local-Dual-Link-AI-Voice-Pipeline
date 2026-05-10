@@ -47,8 +47,7 @@ class PipelineState:
         self.turn_buffer = ""
         self.last_voice_timestamp = 0
         self.flush_task = None
-        
-state = PipelineState()
+        self.intro_done = False
 
 # --- Model Initialization ---
 # Initialize Faster Whisper
@@ -83,13 +82,19 @@ def process_audio_buffer(pcm_data: bytes) -> str:
 
 
 # --- LLM Logic ---
-async def call_llm(prompt: str, ws, emotion_callback):
+async def call_llm(prompt: str, ws, session_state):
     logger.info(f"LLM Prompt: {prompt}")
     
+    if not session_state.intro_done:
+        system_prompt = "You are CivicBot, an IoT robot by Mohamed and Nader for Bizerte, Tunisia. RULES: 1. Start and end this FIRST response with 'Assalamu alaikum'. 2. Mention you are an IoT project by Mohamed and Nader. 3. Total length MUST be under 20 words."
+        session_state.intro_done = True
+    else:
+        system_prompt = "You are CivicBot, a friendly robot in Bizerte. Respond naturally and very concisely (max 2 sentences). No meta-talk."
+
     payload = {
         "model": MODEL_NAME,
         "messages": [
-            {"role": "system", "content": "You are CivicBot, an IoT robot by Mohamed and Nader for Bizerte, Tunisia. RULES: 1. Start and end EVERY response with 'Assalamu alaikum'. 2. Mention you are an IoT project by Mohamed and Nader. 3. Total length MUST be under 20 words. 4. No meta-talk, roleplay tags, or long explanations."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}
         ],
         "stream": True,
@@ -173,20 +178,17 @@ async def process_tts_and_send(text: str, ws):
 
 
 # --- WS Server ---
-async def flush_turn(ws):
-    global state
+async def flush_turn(ws, session_state):
     while True:
         try:
             await asyncio.sleep(0.1)
-            if state.turn_buffer and (time.time() - state.last_voice_timestamp > 0.8):
-                final_transcript = state.turn_buffer.strip()
-                state.turn_buffer = ""
+            if session_state.turn_buffer and (time.time() - session_state.last_voice_timestamp > 0.8):
+                final_transcript = session_state.turn_buffer.strip()
+                session_state.turn_buffer = ""
                 logger.info(f"Turn finalized: {final_transcript}")
-                # Removing "Thinking" UI update as requested
-                # await ws.send(json.dumps({"type": "llm", "text": f"Heard: {final_transcript}", "emotion": "thinking"}))
                 
                 # Start LLM response
-                asyncio.create_task(call_llm(final_transcript, ws, None))
+                asyncio.create_task(call_llm(final_transcript, ws, session_state))
         except asyncio.CancelledError:
             break
         except Exception as e:
@@ -209,29 +211,27 @@ async def handle_connection(ws):
     logger.info("Client connected")
     connected_clients.add(ws)
     
-    global state
-    state.audio_buffer.clear()
-    state.turn_buffer = ""
-    state.last_voice_timestamp = 0
+    # Create a fresh state for THIS specific connection
+    session_state = PipelineState()
     
     # Start flush monitor
-    flush_task = asyncio.create_task(flush_turn(ws))
+    flush_task = asyncio.create_task(flush_turn(ws, session_state))
     
     try:
          async for message in ws:
              if isinstance(message, bytes):
-                 state.audio_buffer.extend(message)
+                 session_state.audio_buffer.extend(message)
                  
                  # Process every 1 second of audio (32000 bytes at 16kHZ 16bit)
-                 if len(state.audio_buffer) >= 32000:
-                     pcm_to_process = bytes(state.audio_buffer)
-                     state.audio_buffer.clear()
+                 if len(session_state.audio_buffer) >= 32000:
+                     pcm_to_process = bytes(session_state.audio_buffer)
+                     session_state.audio_buffer.clear()
                      
                      transcription = process_audio_buffer(pcm_to_process)
                      if transcription:
                          logger.info(f"Interim Transcription: {transcription}")
-                         state.turn_buffer += transcription + " "
-                         state.last_voice_timestamp = time.time()
+                         session_state.turn_buffer += transcription + " "
+                         session_state.last_voice_timestamp = time.time()
                          
              elif isinstance(message, str):
                  try:
@@ -248,7 +248,8 @@ async def handle_connection(ws):
     except websockets.exceptions.ConnectionClosed:
          logger.info("Client disconnected")
     finally:
-         connected_clients.remove(ws)
+         if ws in connected_clients:
+            connected_clients.remove(ws)
          flush_task.cancel()
 
 async def main():
