@@ -8,6 +8,11 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [wsStatus, setWsStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  const [logs, setLogs] = useState<{ id: number, text: string, type: 'info' | 'error' | 'ws' }[]>([]);
+
+  const addLog = (text: string, type: 'info' | 'error' | 'ws' = 'info') => {
+    setLogs(prev => [{ id: Date.now(), text, type }, ...prev].slice(0, 50));
+  };
 
   useEffect(() => {
     const socket = new WebSocket(`ws://localhost:8765`);
