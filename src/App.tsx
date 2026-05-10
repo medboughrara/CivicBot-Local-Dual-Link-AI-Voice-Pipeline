@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'monitor' | 'logs' | 'config'>('monitor');
-  const [deviceIp, setDeviceIp] = useState('100.64.0.1'); // Default Tailscale IP placeholder
+  const [deviceIp, setDeviceIp] = useState('100.109.37.45'); // Default Tailscale IP placeholder
   const [isStreaming, setIsStreaming] = useState(false);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [wsStatus, setWsStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
@@ -59,19 +59,19 @@ export default function App() {
           <h1 className="text-xl font-bold tracking-widest text-cyan-400">CIVIC_BOT_OS_V1.1</h1>
         </div>
         <div className="flex gap-4">
-          <button 
+          <button
             onClick={() => setActiveTab('monitor')}
             className={`flex items-center gap-2 px-3 py-1 rounded transition-colors ${activeTab === 'monitor' ? 'bg-cyan-900/30 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
           >
             <Camera size={18} /> MONITOR
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('logs')}
             className={`flex items-center gap-2 px-3 py-1 rounded transition-colors ${activeTab === 'logs' ? 'bg-cyan-900/30 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
           >
             <Terminal size={18} /> LOGS
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('config')}
             className={`flex items-center gap-2 px-3 py-1 rounded transition-colors ${activeTab === 'config' ? 'bg-cyan-900/30 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
           >
@@ -84,7 +84,7 @@ export default function App() {
       <main className="flex-1 p-6 flex flex-col gap-6">
         <AnimatePresence mode="wait">
           {activeTab === 'monitor' && (
-            <motion.div 
+            <motion.div
               key="monitor"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -95,9 +95,9 @@ export default function App() {
               <div className="lg:col-span-2 flex flex-col gap-4">
                 <div className="relative aspect-video bg-black rounded-lg border border-[#1A1A1A] overflow-hidden group">
                   {isStreaming ? (
-                    <img 
-                      src={`http://${deviceIp}:8080/stream`} 
-                      alt="Camera Stream" 
+                    <img
+                      src={`http://${deviceIp}:8080/stream`}
+                      alt="Camera Stream"
                       className="w-full h-full object-contain"
                       onError={() => {
                         addLog('Camera stream failed to load', 'error');
@@ -110,9 +110,9 @@ export default function App() {
                       <p className="text-sm">STREAM_OFFLINE</p>
                     </div>
                   )}
-                  
+
                   <div className="absolute bottom-4 right-4 flex gap-2">
-                    <button 
+                    <button
                       onClick={() => setIsStreaming(!isStreaming)}
                       className={`px-4 py-2 rounded-full font-bold flex items-center gap-2 transition-all ${isStreaming ? 'bg-red-500 hover:bg-red-600' : 'bg-cyan-500 hover:bg-cyan-600'} text-black`}
                     >
@@ -123,44 +123,44 @@ export default function App() {
 
                 {/* Movement Controls */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg">
-                        <div className="flex items-center gap-2 mb-4 text-cyan-400 text-xs font-bold uppercase tracking-widest">
-                            <Activity size={14} /> Drive_System_Control
-                        </div>
-                        <div className="flex justify-center">
-                            <div className="grid grid-cols-3 gap-2">
-                                <div />
-                                <button onMouseDown={() => sendMove('forward')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▲</button>
-                                <div />
-                                <button onMouseDown={() => sendMove('left')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">◀</button>
-                                <button onClick={() => sendMove('stop')} className="w-12 h-12 bg-red-900/20 border border-red-500/50 rounded hover:bg-red-500/30 flex items-center justify-center text-red-500 text-[10px] font-bold">STOP</button>
-                                <button onMouseDown={() => sendMove('right')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▶</button>
-                                <div />
-                                <button onMouseDown={() => sendMove('backward')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▼</button>
-                                <div />
-                            </div>
-                        </div>
+                  <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-4 text-cyan-400 text-xs font-bold uppercase tracking-widest">
+                      <Activity size={14} /> Drive_System_Control
                     </div>
+                    <div className="flex justify-center">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div />
+                        <button onMouseDown={() => sendMove('forward')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▲</button>
+                        <div />
+                        <button onMouseDown={() => sendMove('left')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">◀</button>
+                        <button onClick={() => sendMove('stop')} className="w-12 h-12 bg-red-900/20 border border-red-500/50 rounded hover:bg-red-500/30 flex items-center justify-center text-red-500 text-[10px] font-bold">STOP</button>
+                        <button onMouseDown={() => sendMove('right')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▶</button>
+                        <div />
+                        <button onMouseDown={() => sendMove('backward')} onMouseUp={() => sendMove('stop')} className="w-12 h-12 bg-[#1A1A1A] border border-[#333] rounded hover:border-cyan-400 flex items-center justify-center transition-colors">▼</button>
+                        <div />
+                      </div>
+                    </div>
+                  </div>
 
-                    <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2 text-cyan-400 text-xs font-bold">
-                            <Activity size={14} /> LIVE_TELEMETRY
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="p-2 bg-[#1A1A1A] rounded">
-                                <p className="text-[8px] text-gray-500 uppercase">Latency</p>
-                                <p className="text-sm font-bold">{wsStatus === 'connected' ? '14ms' : '---'}</p>
-                            </div>
-                            <div className="p-2 bg-[#1A1A1A] rounded">
-                                <p className="text-[8px] text-gray-500 uppercase">Bitrate</p>
-                                <p className="text-sm font-bold">2.4 Mbps</p>
-                            </div>
-                            <div className="p-2 bg-[#1A1A1A] rounded col-span-2">
-                                <p className="text-[8px] text-gray-500 uppercase">Engine Status</p>
-                                <p className={`text-sm font-bold ${wsStatus === 'connected' ? 'text-green-400' : 'text-red-400'}`}>{wsStatus.toUpperCase()}</p>
-                            </div>
-                        </div>
+                  <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2 text-cyan-400 text-xs font-bold">
+                      <Activity size={14} /> LIVE_TELEMETRY
                     </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-2 bg-[#1A1A1A] rounded">
+                        <p className="text-[8px] text-gray-500 uppercase">Latency</p>
+                        <p className="text-sm font-bold">{wsStatus === 'connected' ? '14ms' : '---'}</p>
+                      </div>
+                      <div className="p-2 bg-[#1A1A1A] rounded">
+                        <p className="text-[8px] text-gray-500 uppercase">Bitrate</p>
+                        <p className="text-sm font-bold">2.4 Mbps</p>
+                      </div>
+                      <div className="p-2 bg-[#1A1A1A] rounded col-span-2">
+                        <p className="text-[8px] text-gray-500 uppercase">Engine Status</p>
+                        <p className={`text-sm font-bold ${wsStatus === 'connected' ? 'text-green-400' : 'text-red-400'}`}>{wsStatus.toUpperCase()}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -171,8 +171,8 @@ export default function App() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-[10px] text-gray-500 block mb-1">ANDROID_IP_ADDRESS</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={deviceIp}
                         onChange={(e) => setDeviceIp(e.target.value)}
                         className="w-full bg-[#1A1A1A] border border-[#333] px-3 py-2 rounded focus:border-cyan-400 outline-none text-sm"
@@ -190,7 +190,7 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-[#111111] border border-[#1A1A1A] p-4 rounded-lg h-64 overflow-hidden flex flex-col">
                   <h3 className="text-cyan-400 text-[10px] font-bold mb-2 uppercase opacity-50">Recent System Logs</h3>
                   <div className="flex-1 text-[11px] space-y-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -207,7 +207,7 @@ export default function App() {
           )}
 
           {activeTab === 'logs' && (
-            <motion.div 
+            <motion.div
               key="logs"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -233,7 +233,7 @@ export default function App() {
           )}
 
           {activeTab === 'config' && (
-            <motion.div 
+            <motion.div
               key="config"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -253,7 +253,7 @@ export default function App() {
                       <input type="number" defaultValue="8080" className="w-full bg-[#1A1A1A] border border-[#333] p-3 rounded focus:border-cyan-400 outline-none" />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4 pt-6 border-t border-[#1A1A1A]">
                     <div className="flex justify-between items-center">
                       <div>
