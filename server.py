@@ -1,20 +1,6 @@
 import os
 import sys
 
-# --- DLL Search Path Fix for CUDA on Windows ---
-if sys.platform == 'win32':
-    # Aggressively prioritize Torch's bundled DLL paths to avoid loading broken system-wide CUDNN
-    torch_lib = os.path.join(os.getcwd(), ".venv", "Lib", "site-packages", "torch", "lib")
-    if os.path.exists(torch_lib):
-        # We add the torch lib to search path
-        os.add_dll_directory(torch_lib)
-        # We also clear system-wide NVIDIA/CUDA paths from the process's PATH to avoid confusion
-        current_path = os.environ.get("PATH", "").split(os.pathsep)
-        new_path = [torch_lib]
-        for p in current_path:
-            if "NVIDIA" not in p and "CUDA" not in p:
-                new_path.append(p)
-        os.environ["PATH"] = os.pathsep.join(new_path)
 
 # --- Network Timeout Resiliency ---
 os.environ["HF_HUB_READ_TIMEOUT"] = "120"
@@ -36,6 +22,18 @@ from kokoro import KPipeline
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("AIPipeline")
+
+# --- DLL Search Path Fix for CUDA on Windows ---
+if sys.platform == 'win32':
+    # Use the script's directory to find the .venv
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    torch_lib = os.path.join(script_dir, ".venv", "Lib", "site-packages", "torch", "lib")
+    if os.path.exists(torch_lib):
+        try:
+            os.add_dll_directory(torch_lib)
+            logger.info(f"Added DLL directory: {torch_lib}")
+        except Exception as e:
+            print(f"Warning: Could not add DLL directory: {e}")
 
 # --- Configuration ---
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
