@@ -13,6 +13,11 @@ The system features a bidirectional voice and vision pipeline between an Android
 ![Platform-Android](https://img.shields.io/badge/Platform-Android-orange)
 ![Backend-Python](https://img.shields.io/badge/Backend-Python-blue)
 
+## 🎥 Project Demonstration
+<div align="center">
+  <video src="civicbot_demo.mp4" width="100%" controls></video>
+</div>
+
 ---
 
 ## 🚀 Key Features
